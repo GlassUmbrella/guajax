@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 
-// Copyright (c) 2015 Glass Umbrella.
+// Copyright (c) 2015 Glass Umbrella
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-define([], function() {
+(function(global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) : global.guajax = factory();
+}(this, function() {
     function guajax() {
         var exports = this,
             requests = [],
@@ -124,7 +127,7 @@ define([], function() {
             return deferred.promise;
         };
 
-        exports.hasUnauthorizedRequest = function () {
+        exports.hasUnauthorizedRequest = function() {
             for (var i = 0; i < requests.length; i++) {
                 if (requests[i].jqueryAjax.status == 401) {
                     return true;
@@ -191,7 +194,7 @@ define([], function() {
                 request.deferred.resolve(response);
                 removeRequestById(request.id);
             })
-            .fail(function (jqXHR) {
+            .fail(function(jqXHR) {
                 // 401s are queued up and retried when call resubmitUnauthorizedRequests
                 if (jqXHR.status !== 401) {
                     request.deferred.reject(jqXHR.responseJSON);
@@ -225,4 +228,4 @@ define([], function() {
     }
 
     return new guajax();
-});
+}));
