@@ -1,5 +1,4 @@
 define([], function() {
-    
     function guajax() {
         var exports = this,
             requests = [],
@@ -15,57 +14,83 @@ define([], function() {
             });
         };
 
-        exports.get = function(url, data) {
-            return exports.ajax({
+        exports.get = function(url, data, options) {
+            var defaultOptions = {
                 type: "GET",
                 url: url,
-                data: data
-            });
+                data: data,
+                allowFail: false
+            };
+            return exports.ajax($.extend({}, defaultOptions, options));
         };
 
-        exports.put = function(url, data) {
-            return exports.ajax({
+        exports.put = function(url, data, options) {
+            var defaultOptions = {
                 type: "PUT",
                 url: url,
-                data: data
-            });
+                data: data,
+                allowFail: false
+            };
+            return exports.ajax($.extend({}, defaultOptions, options));
         };
 
-        exports.patch = function(url, data) {
-            return exports.ajax({
+        exports.patch = function(url, data, options) {
+            var defaultOptions = {
                 type: "PATCH",
                 url: url,
-                data: data
-            });
+                data: data,
+                allowFail: false
+            };
+            return exports.ajax($.extend({}, defaultOptions, options));
         };
 
-        exports.del = function(url, data) {
+        exports.del = function(url, data, options) {
+            var defaultOptions = {
+                type: "DELETE",
+                url: url,
+                allowFail: false
+            };
             if (data) {
-                return exports.ajax({
-                    type: "DELETE",
-                    url: url,
-                    data: data
-                });
-            } else {
-                return exports.ajax({
-                    type: "DELETE",
-                    url: url
-                });
+                defaultOptions.data = data;
             }
+            return exports.ajax($.extend({}, defaultOptions, options));
         };
 
-        exports.post = function(url, data) {
-            return exports.ajax({
+        exports.post = function(url, data, options) {
+            var defaultOptions = {
                 type: "POST",
                 url: url,
-                data: data
-            });
+                data: data,
+                allowFail: false
+            };
+            return exports.ajax($.extend({}, defaultOptions, options));
+        };
+
+        exports.postFile = function(url, data, options) {
+            var defaultOptions = {
+                type: "POST",
+                url: url,
+                data: data,
+                allowFail: false
+            };
+            return exports.xhr($.extend({}, defaultOptions, options));
+        };
+
+        exports.xhr = function(options) {
+            var deferred = Q.defer();
+
+            var request = new guajaxRequest(deferred, options);
+
+            runXhrRequest(request);
+
+            return deferred.promise;
         };
 
         exports.ajax = function(options) {
             var deferred = Q.defer();
 
             var request = new guajaxRequest(deferred, options);
+
             if (request.isSingle) {
                 var identifier = request.identifier || options.url;
                 abortAndRemovePreviousRequest(identifier);
@@ -100,7 +125,8 @@ define([], function() {
                 deferred: deferred,
                 options: options,
                 isSingle: options.isSingle || false,
-                identifier: options.identifier || options.url
+                identifier: options.identifier || options.url,
+                allowFail: options.allowFail || false
             };
         }
 
@@ -126,7 +152,7 @@ define([], function() {
         }
 
         function getNextRequestId() {
-            return "request_" + ++counter;
+            return "request_" + (++counter);
         }
 
         function removeRequestById(id) {
@@ -139,17 +165,40 @@ define([], function() {
 
         function runRequest(request) {
             request.jqueryAjax = $.ajax(request.options)
-                .done(function(response) {
-                    request.deferred.resolve(response);
+            .done(function(response) {
+                request.deferred.resolve(response);
+                removeRequestById(request.id);
+            })
+            .fail(function (jqXHR) {
+                // 401s are queued up and retried when call resubmitUnauthorizedRequests
+                if (jqXHR.status !== 401) {
+                    request.deferred.reject(jqXHR.responseJSON);
                     removeRequestById(request.id);
-                })
-                .fail(function (jqXHR) {
-                    // 401s are queued up and retried when call resubmitUnauthorizedRequests 
-                    if (jqXHR.status !== 401) {
-                        request.deferred.reject(jqXHR.responseJSON);
-                        removeRequestById(request.id);
-                    }
-                });
+                }
+            });
+        }
+
+        function runXhrRequest(request) {
+            var xhrRequest = new XMLHttpRequest();
+            var formData = new FormData();
+
+            xhrRequest.open(request.options.type, request.options.url);
+
+            xhrRequest.onload = function() {
+                var response = JSON.parse(xhrRequest.response);
+
+                if (xhrRequest.status == 200) {
+                    request.deferred.resolve(response);
+                } else {
+                    request.deferred.reject(response);
+                }
+            };
+
+            for (var key in request.options.data) {
+                formData.append(key, request.options.data[key]);
+            }
+
+            xhrRequest.send(formData);
         }
     }
 
