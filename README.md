@@ -23,3 +23,7 @@ guajax.get("url", {
 * post
 * del
 * put
+
+
+## Install
+`bower install guajax --save`
