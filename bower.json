@@ -1,0 +1,23 @@
+{
+  "name": "guajax",
+  "main": "guajax.js",
+  "homepage": "https://github.com/GlassUmbrella/guajax",
+  "authors": [
+    "Matt Randle",
+    "Weiran Zhang",
+    "Eddie Lee"
+  ],
+  "description": "Glass Umbrella Ajax",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.3",
+    "q": "^2.0.2"
+  }
+}
