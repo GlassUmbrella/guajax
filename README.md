@@ -1,10 +1,25 @@
-guajax
-======
+# guajax
 
-Depends on 
+Promise based ajax libary from Glass Umbrella. Supports AMD/Requre.js
 
-* JQuery
-* Q.js
+## Usage
 
+```
+guajax.get("url", { 
+  property: value
+})
+.then(response) {
+  // Success
+})
+.catch(error) {
+  // Fail
+});
+```
 
-Supports Require.js
+## Docs
+
+* get
+* patch
+* post
+* del
+* put
